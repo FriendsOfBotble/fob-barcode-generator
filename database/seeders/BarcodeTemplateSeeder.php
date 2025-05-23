@@ -1,0 +1,118 @@
+<?php
+
+namespace FriendsOfBotble\BarcodeGenerator\Database\Seeders;
+
+use FriendsOfBotble\BarcodeGenerator\Models\BarcodeTemplate;
+use Illuminate\Database\Seeder;
+
+class BarcodeTemplateSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $templates = [
+            [
+                'name' => 'Standard A4 Labels',
+                'description' => 'Standard A4 paper with 4x10 labels',
+                'paper_size' => 'A4',
+                'orientation' => 'portrait',
+                'label_width' => 50.00,
+                'label_height' => 25.00,
+                'margin_top' => 10.00,
+                'margin_bottom' => 10.00,
+                'margin_left' => 10.00,
+                'margin_right' => 10.00,
+                'padding' => 2.00,
+                'columns_per_page' => 4,
+                'rows_per_page' => 10,
+                'barcode_type' => 'C128',
+                'barcode_width' => 40.00,
+                'barcode_height' => 15.00,
+                'include_text' => true,
+                'text_position' => 'bottom',
+                'text_size' => 8,
+                'fields' => ['name', 'sku', 'price'],
+                'is_default' => true,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Thermal 4x6 Labels',
+                'description' => 'Thermal printer labels 4x6 inches',
+                'paper_size' => 'thermal_4x6',
+                'orientation' => 'landscape',
+                'label_width' => 101.60,
+                'label_height' => 152.40,
+                'margin_top' => 5.00,
+                'margin_bottom' => 5.00,
+                'margin_left' => 5.00,
+                'margin_right' => 5.00,
+                'padding' => 5.00,
+                'columns_per_page' => 1,
+                'rows_per_page' => 1,
+                'barcode_type' => 'C128',
+                'barcode_width' => 80.00,
+                'barcode_height' => 20.00,
+                'include_text' => true,
+                'text_position' => 'bottom',
+                'text_size' => 12,
+                'fields' => ['name', 'sku', 'barcode', 'price'],
+                'is_default' => false,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Small Product Labels',
+                'description' => 'Small labels for product identification',
+                'paper_size' => 'A4',
+                'orientation' => 'portrait',
+                'label_width' => 30.00,
+                'label_height' => 15.00,
+                'margin_top' => 10.00,
+                'margin_bottom' => 10.00,
+                'margin_left' => 10.00,
+                'margin_right' => 10.00,
+                'padding' => 1.00,
+                'columns_per_page' => 6,
+                'rows_per_page' => 15,
+                'barcode_type' => 'C128',
+                'barcode_width' => 25.00,
+                'barcode_height' => 8.00,
+                'include_text' => true,
+                'text_position' => 'bottom',
+                'text_size' => 6,
+                'fields' => ['sku'],
+                'is_default' => false,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Price Labels with Barcode',
+                'description' => 'Labels with price and barcode for retail',
+                'paper_size' => 'A4',
+                'orientation' => 'portrait',
+                'label_width' => 60.00,
+                'label_height' => 40.00,
+                'margin_top' => 10.00,
+                'margin_bottom' => 10.00,
+                'margin_left' => 10.00,
+                'margin_right' => 10.00,
+                'padding' => 3.00,
+                'columns_per_page' => 3,
+                'rows_per_page' => 6,
+                'barcode_type' => 'EAN13',
+                'barcode_width' => 50.00,
+                'barcode_height' => 20.00,
+                'include_text' => true,
+                'text_position' => 'bottom',
+                'text_size' => 10,
+                'fields' => ['name', 'price', 'sale_price', 'brand'],
+                'is_default' => false,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($templates as $template) {
+            BarcodeTemplate::query()->updateOrCreate(
+                ['name' => $template['name']],
+                $template
+            );
+        }
+    }
+}

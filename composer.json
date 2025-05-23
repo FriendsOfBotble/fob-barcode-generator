@@ -1,0 +1,22 @@
+{
+    "name": "friendsofbotble/fob-barcode-generator",
+    "description": "Generate and print barcode labels for products & orders with support for multiple printer types",
+    "type": "botble-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Friends Of Botble",
+            "email": "contact@friendsofbotble.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "FriendsOfBotble\\BarcodeGenerator\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
