@@ -32,7 +32,7 @@ class BarcodeGeneratorService
         $this->generator = new BarcodeGenerator();
     }
 
-    public function generateBarcode(string $data, string $type = null, string $format = 'svg'): string
+    public function generateBarcode(string $data, ?string $type = null, string $format = 'svg'): string
     {
         // Use default type if none provided
         if ($type === null) {
@@ -224,9 +224,15 @@ class BarcodeGeneratorService
     protected function formatDimensions(Product $product): ?string
     {
         $dimensions = [];
-        if ($product->length) $dimensions[] = $product->length;
-        if ($product->width) $dimensions[] = $product->width;
-        if ($product->height) $dimensions[] = $product->height;
+        if ($product->length) {
+            $dimensions[] = $product->length;
+        }
+        if ($product->width) {
+            $dimensions[] = $product->width;
+        }
+        if ($product->height) {
+            $dimensions[] = $product->height;
+        }
 
         return $dimensions ? implode(' × ', $dimensions) . ' cm' : null;
     }

@@ -21,7 +21,7 @@ class SetupWizardController extends BaseController
             ->addScriptsDirectly('vendor/core/plugins/fob-barcode-generator/js/setup-wizard.js');
 
         $isCompleted = Setting::get('barcode_generator_setup_completed', false);
-        
+
         if ($isCompleted) {
             return redirect()->route('barcode-generator.index');
         }
@@ -48,22 +48,26 @@ class SetupWizardController extends BaseController
             case 1:
                 // Save printer type preference
                 Setting::set('barcode_generator_printer_type', $request->input('printer_type'));
+
                 break;
 
             case 2:
                 // Save paper size preference
                 Setting::set('barcode_generator_default_paper_size', $request->input('paper_size'));
+
                 break;
 
             case 3:
                 // Save barcode type preference
                 Setting::set('barcode_generator_default_barcode_type', $request->input('barcode_type'));
+
                 break;
 
             case 4:
                 // Create default template and complete setup
                 $this->createDefaultTemplate($request);
                 Setting::set('barcode_generator_setup_completed', true);
+
                 break;
         }
 
@@ -141,7 +145,7 @@ class SetupWizardController extends BaseController
     protected function createThermalTemplate(string $name, string $paperSize, string $barcodeType): BarcodeTemplate
     {
         $dimensions = PaperSizeEnum::getDimensions($paperSize);
-        
+
         return BarcodeTemplate::create([
             'name' => $name,
             'description' => 'Auto-generated thermal template from setup wizard',

@@ -54,6 +54,16 @@ class BarcodeGeneratorServiceProvider extends ServiceProvider
                         ->icon('ti ti-template')
                         ->route('barcode-generator.templates.index')
                         ->permissions('barcode-generator.templates')
+                )
+                ->registerItem(
+                    DashboardMenuItem::make()
+                        ->id('cms-plugins-barcode-generator-settings')
+                        ->priority(3)
+                        ->parentId('cms-plugins-barcode-generator')
+                        ->name('plugins/fob-barcode-generator::barcode-generator.menu.settings')
+                        ->icon('ti ti-settings')
+                        ->route('barcode-generator.settings')
+                        ->permissions('barcode-generator.settings')
                 );
         });
 

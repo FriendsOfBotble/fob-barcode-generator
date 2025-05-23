@@ -25,6 +25,17 @@ class BarcodeGeneratorSettingRequest extends Request
             'barcode_generator_orientation' => ['required', 'string', Rule::in(['portrait', 'landscape'])],
             'barcode_generator_columns_per_page' => ['required', 'integer', 'min:1', 'max:10'],
             'barcode_generator_rows_per_page' => ['required', 'integer', 'min:1', 'max:20'],
+            // Advanced settings
+            'barcode_generator_auto_generate_sku' => [new OnOffRule()],
+            'barcode_generator_sku_prefix' => ['nullable', 'string', 'max:10'],
+            'barcode_generator_enable_batch_mode' => [new OnOffRule()],
+            'barcode_generator_max_products_per_batch' => ['required', 'integer', 'min:10', 'max:1000'],
+            // Appearance settings
+            'barcode_generator_background_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'barcode_generator_text_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'barcode_generator_border_enabled' => [new OnOffRule()],
+            'barcode_generator_border_width' => ['required', 'numeric', 'min:0.1', 'max:5'],
+            'barcode_generator_border_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ];
     }
 }
