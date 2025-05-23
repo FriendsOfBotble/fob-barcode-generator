@@ -54,7 +54,7 @@ class HookServiceProvider extends ServiceProvider
 
             $html .= '</p>';
             $html .= '<div class="d-flex gap-2 justify-content-center">';
-            $html .= '<a href="' . route('barcode-generator.index', ['products[]' => $product->id]) . '" class="btn btn-sm btn-primary">';
+            $html .= '<a href="' . route('barcode-generator.index', ['products[]' => $product->id]) . '" class="btn btn-sm btn-primary" target="_blank">';
             $html .= '<i class="ti ti-printer"></i> ' . trans('plugins/fob-barcode-generator::barcode-generator.print_label');
             $html .= '</a>';
             $html .= '</div>';

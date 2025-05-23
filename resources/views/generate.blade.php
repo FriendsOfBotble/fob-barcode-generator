@@ -1,6 +1,7 @@
 @extends(BaseHelper::getAdminMasterLayoutTemplate())
 
 @section('content')
+    <div class="barcode-generator">
     <div class="row">
         <div class="col-md-8">
             <div class="card">
@@ -11,11 +12,12 @@
                     <form id="barcode-generator-form">
                         @csrf
 
-                        <div class="mb-3">
+                        <div class="mb-3 product-selector">
                             <label class="form-label">{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.select_products') }}</label>
                             <select name="products[]" id="products-select" class="form-control" multiple required>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->id }}">
+                                    <option value="{{ $product->id }}"
+                                        @if(isset($selectedProductIds) && in_array($product->id, $selectedProductIds)) selected @endif>
                                         {{ $product->name }}
                                         @if($product->sku)
                                             (SKU: {{ $product->sku }})
@@ -34,7 +36,12 @@
                             <select name="template_id" id="template-select" class="form-control" required>
                                 <option value="">{{ trans('plugins/fob-barcode-generator::barcode-generator.messages.no_template_selected') }}</option>
                                 @foreach($templates as $template)
-                                    <option value="{{ $template->id }}" @if($template->is_default) selected @endif>
+                                    <option value="{{ $template->id }}"
+                                        @if(isset($selectedTemplateId) && $selectedTemplateId == $template->id)
+                                            selected
+                                        @elseif(!isset($selectedTemplateId) && $template->is_default)
+                                            selected
+                                        @endif>
                                         {{ $template->name }}
                                         @if($template->description)
                                             - {{ $template->description }}
@@ -46,7 +53,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.quantity') }}</label>
-                            <input type="number" name="quantity" class="form-control" value="1" min="1" max="100" required>
+                            <input type="number" name="quantity" class="form-control" value="{{ $selectedQuantity ?? 1 }}" min="1" max="100" required>
                         </div>
 
                         <div class="row">
@@ -78,38 +85,142 @@
 
         <div class="col-md-4">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.preview') }}</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0 d-flex align-items-center gap-2">
+                        <x-core::icon name="ti ti-eye" class="text-primary" />
+                        {{ trans('plugins/fob-barcode-generator::barcode-generator.generate.preview') }}
+                    </h4>
+                    <div class="preview-actions d-none" id="preview-actions">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-preview-btn"
+                                title="Refresh Preview" data-bs-toggle="tooltip">
+                            <x-core::icon name="ti ti-refresh" />
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary" id="fullscreen-preview-btn"
+                                title="Full Preview" data-bs-toggle="tooltip">
+                            <x-core::icon name="ti ti-maximize" />
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div id="preview-container" class="text-center">
-                        <p class="text-muted">{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.preview') }}</p>
+                <div class="card-body p-0">
+                    <div id="preview-container" class="preview-container">
+                        <div class="preview-placeholder">
+                            <div class="preview-icon">
+                                <x-core::icon name="ti ti-barcode" class="icon-xl" />
+                            </div>
+                            <h6 class="mb-2">Live Preview</h6>
+                            <p class="small mb-3">Select products and template to see preview</p>
+                            <div class="preview-hint">
+                                <x-core::icon name="ti ti-info-circle" class="icon" />
+                                <span>Click Preview to see full details</span>
+                            </div>
+                        </div>
+                        <div class="preview-loading d-none" id="preview-loading-mini">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="loading-text">Generating preview...</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Preview Modal -->
+    <!-- Enhanced Preview Modal -->
     <div class="modal fade" id="preview-modal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-fullscreen-lg-down modal-xl">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.preview') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-light justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <x-core::icon name="ti ti-eye" class="me-2 text-primary" />
+                        <h5 class="modal-title mb-0">Barcode Labels Preview</h5>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="preview-controls">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-out-btn"
+                                    title="Zoom Out (Ctrl + -)" data-bs-toggle="tooltip">
+                                <x-core::icon name="ti ti-zoom-out" />
+                            </button>
+                            <span class="zoom-level mx-2" id="zoom-level">100%</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-in-btn"
+                                    title="Zoom In (Ctrl + +)" data-bs-toggle="tooltip">
+                                <x-core::icon name="ti ti-zoom-in" />
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-reset-btn"
+                                    title="Reset Zoom (Ctrl + 0)" data-bs-toggle="tooltip">
+                                <x-core::icon name="ti ti-zoom-reset" />
+                            </button>
+                        </div>
+                        <div class="vr"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="print-preview-btn"
+                                title="Print Preview (Ctrl + P)" data-bs-toggle="tooltip">
+                            <x-core::icon name="ti ti-printer" />
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" id="fit-to-screen-btn"
+                                title="Fit to Screen" data-bs-toggle="tooltip">
+                            <x-core::icon name="ti ti-arrows-maximize" />
+                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <iframe id="preview-iframe" style="width: 100%; height: 600px; border: none;"></iframe>
+                <div class="modal-body p-0 position-relative">
+                    <div class="preview-loading d-none" id="preview-loading">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mb-2">Generating preview...</p>
+                                <div class="progress" style="width: 200px; margin: 0 auto;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-iframe-container">
+                        <iframe id="preview-iframe" class="preview-iframe"></iframe>
+                        <div class="preview-overlay d-none" id="preview-overlay">
+                            <div class="preview-overlay-content">
+                                <x-core::icon name="ti ti-zoom-in" class="mb-2" />
+                                <p class="mb-0">Click to zoom</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ trans('core/base::forms.cancel') }}</button>
-                    <button type="button" id="download-from-modal" class="btn btn-primary">
-                        <x-core::icon name="ti ti-download" />
-                        {{ trans('plugins/fob-barcode-generator::barcode-generator.generate.download_pdf') }}
-                    </button>
+                <div class="modal-footer bg-light">
+                    <div class="d-flex justify-content-between w-100 align-items-center">
+                        <div class="preview-info d-flex align-items-center gap-3">
+                            <div class="preview-stats-badge">
+                                <x-core::icon name="ti ti-info-circle" class="me-1" />
+                                <span id="preview-stats">Ready to generate labels</span>
+                            </div>
+                            <div class="preview-quality-indicator d-none" id="preview-quality">
+                                <span class="badge bg-success">
+                                    <x-core::icon name="ti ti-check" class="me-1" />
+                                    High Quality
+                                </span>
+                            </div>
+                        </div>
+                        <div class="preview-actions d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <x-core::icon name="ti ti-x" />
+                                Close
+                            </button>
+                            <button type="button" id="refresh-modal-preview" class="btn btn-outline-info">
+                                <x-core::icon name="ti ti-refresh" />
+                                Refresh
+                            </button>
+                            <button type="button" id="download-from-modal" class="btn btn-primary">
+                                <x-core::icon name="ti ti-download" />
+                                Download Labels
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 @endsection
 
@@ -126,6 +237,11 @@
                 noTemplateSelected: '{{ trans('plugins/fob-barcode-generator::barcode-generator.messages.no_template_selected') }}',
                 selectProducts: '{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.select_products') }}',
                 selectTemplate: '{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.select_template') }}'
+            },
+            preselected: {
+                products: @json($selectedProductIds ?? []),
+                templateId: {{ $selectedTemplateId ?? 'null' }},
+                quantity: {{ $selectedQuantity ?? 1 }}
             }
         };
     </script>

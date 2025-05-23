@@ -6,6 +6,7 @@ class BarcodeGenerator {
     init() {
         this.initializeSelectors();
         this.bindEvents();
+        this.initializePreselectedValues();
     }
 
     initializeSelectors() {
@@ -25,6 +26,15 @@ class BarcodeGenerator {
                 width: '100%'
             });
         }
+    }
+
+    initializePreselectedValues() {
+        // Update counters and preview for pre-selected values
+        setTimeout(() => {
+            this.updateProductCount();
+            this.updateTemplatePreview();
+            this.updatePreviewContainer();
+        }, 100); // Small delay to ensure Select2 is initialized
     }
 
     bindEvents() {
@@ -61,6 +71,59 @@ class BarcodeGenerator {
             this.updateEstimatedLabels();
             this.updatePreviewContainer();
         });
+
+        // Enhanced preview controls
+        $(document).on('click', '#refresh-preview-btn', () => {
+            this.refreshPreview();
+        });
+
+        $(document).on('click', '#fullscreen-preview-btn', () => {
+            this.showPreview();
+        });
+
+        // Modal preview controls
+        $(document).on('click', '#zoom-in-btn', () => {
+            this.zoomPreview(1.2);
+        });
+
+        $(document).on('click', '#zoom-out-btn', () => {
+            this.zoomPreview(0.8);
+        });
+
+        $(document).on('click', '#zoom-reset-btn', () => {
+            this.resetZoom();
+        });
+
+        $(document).on('click', '#fit-to-screen-btn', () => {
+            this.fitToScreen();
+        });
+
+        $(document).on('click', '#print-preview-btn', () => {
+            this.printPreview();
+        });
+
+        $(document).on('click', '#refresh-modal-preview', () => {
+            this.refreshModalPreview();
+        });
+
+        // Modal events
+        $('#preview-modal').on('shown.bs.modal', () => {
+            this.onModalShown();
+        });
+
+        $('#preview-modal').on('hidden.bs.modal', () => {
+            this.onModalHidden();
+        });
+
+        // Keyboard shortcuts
+        $(document).on('keydown', (e) => {
+            if ($('#preview-modal').hasClass('show')) {
+                this.handleKeyboardShortcuts(e);
+            }
+        });
+
+        // Initialize tooltips
+        this.initializeTooltips();
     }
 
     handleFormSubmission() {
@@ -109,6 +172,13 @@ class BarcodeGenerator {
         const formData = $('#barcode-generator-form').serialize();
         const previewUrl = (config.routes?.preview || '/admin/barcode-generator/preview') + '?' + formData;
 
+        // Show loading state
+        this.showPreviewLoading();
+
+        // Update preview stats
+        this.updatePreviewStats();
+
+        // Load preview
         $('#preview-iframe').attr('src', previewUrl);
         $('#preview-modal').modal('show');
     }
@@ -154,50 +224,93 @@ class BarcodeGenerator {
         const quantity = parseInt($('input[name="quantity"]').val()) || 1;
 
         if (!products || products.length === 0 || !template) {
-            $('#preview-container').html('<p class="text-muted">Select products and template to see preview</p>');
+            this.showPreviewPlaceholder();
+            $('#preview-actions').addClass('d-none');
             return;
         }
 
         // Show loading state
-        $('#preview-container').html('<div class="text-center"><i class="ti ti-loader-2 spin"></i> Loading preview...</div>');
+        this.showPreviewLoading();
 
         // Generate mini preview
-        this.generateMiniPreview(products, template, quantity);
+        setTimeout(() => {
+            this.generateMiniPreview(products, template, quantity);
+            $('#preview-actions').removeClass('d-none');
+        }, 300);
     }
 
     generateMiniPreview(products, template, quantity) {
         const config = window.BarcodeGeneratorConfig || {};
         const selectedProducts = $('#products-select option:selected');
         const templateText = $('#template-select option:selected').text();
+        const totalLabels = products.length * quantity;
 
-        let previewHtml = '<div class="preview-summary">';
-        previewHtml += `<h6><i class="ti ti-barcode"></i> Preview</h6>`;
-        previewHtml += `<p><strong>Template:</strong> ${templateText}</p>`;
-        previewHtml += `<p><strong>Products:</strong> ${products.length}</p>`;
-        previewHtml += `<p><strong>Quantity each:</strong> ${quantity}</p>`;
-        previewHtml += `<p><strong>Total labels:</strong> ${products.length * quantity}</p>`;
+        let previewHtml = '<div class="preview-summary slide-in">';
 
-        previewHtml += '<div class="mt-3"><strong>Selected Products:</strong></div>';
-        previewHtml += '<div class="selected-products-list">';
+        // Header
+        previewHtml += `<h6><svg class="icon me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5v14h18V5H3z"/><path d="M7 8v8"/><path d="M11 8v8"/><path d="M15 8v8"/></svg> Label Preview</h6>`;
 
-        selectedProducts.each(function() {
-            const productName = $(this).text();
-            previewHtml += `<div class="product-item"><i class="ti ti-package"></i> ${productName}</div>`;
-        });
-
+        // Stats grid
+        previewHtml += '<div class="preview-stats">';
+        previewHtml += `<div class="stat-item">`;
+        previewHtml += `<span class="stat-value">${products.length}</span>`;
+        previewHtml += `<span class="stat-label">Products</span>`;
+        previewHtml += `</div>`;
+        previewHtml += `<div class="stat-item">`;
+        previewHtml += `<span class="stat-value">${quantity}</span>`;
+        previewHtml += `<span class="stat-label">Qty Each</span>`;
+        previewHtml += `</div>`;
+        previewHtml += `<div class="stat-item">`;
+        previewHtml += `<span class="stat-value">${totalLabels}</span>`;
+        previewHtml += `<span class="stat-label">Total Labels</span>`;
+        previewHtml += `</div>`;
         previewHtml += '</div>';
-        previewHtml += '<div class="mt-3">';
-        previewHtml += `<button type="button" id="quick-preview-btn" class="btn btn-sm btn-outline-primary">`;
-        previewHtml += `<i class="ti ti-eye"></i> Quick Preview`;
+
+        // Template info
+        previewHtml += `<div class="mb-3">`;
+        previewHtml += `<strong><svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/><path d="M8 16h8"/><path d="M8 8h8"/></svg> Template:</strong> ${templateText}`;
+        previewHtml += `</div>`;
+
+        // Selected products list
+        previewHtml += '<div class="selected-products-list">';
+        selectedProducts.each(function() {
+            const productText = $(this).text();
+            const productName = productText.split('(')[0].trim();
+            const productMeta = productText.includes('(') ? productText.substring(productText.indexOf('(')) : '';
+
+            previewHtml += `<div class="product-item">`;
+            previewHtml += `<svg class="icon me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 9.4L7.55 4.24C7.21 4.09 6.81 4.09 6.47 4.24L3.5 5.75C2.79 6.15 2.5 7.04 2.91 7.75L7.55 15.76C7.89 16.09 8.29 16.09 8.63 15.76L16.5 9.4Z"/><path d="M14.12 6.88L8.5 3.75L5.5 5.25"/><path d="M7.5 15.5V9.5"/></svg>`;
+            previewHtml += `<div class="product-details">`;
+            previewHtml += `<div class="product-name">${productName}</div>`;
+            if (productMeta) {
+                previewHtml += `<div class="product-meta">${productMeta}</div>`;
+            }
+            previewHtml += `</div>`;
+            previewHtml += `</div>`;
+        });
+        previewHtml += '</div>';
+
+        // Action buttons
+        previewHtml += '<div class="preview-actions">';
+        previewHtml += `<button type="button" id="quick-preview-btn" class="btn btn-primary btn-sm">`;
+        previewHtml += `<svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Full Preview`;
+        previewHtml += `</button>`;
+        previewHtml += `<button type="button" id="generate-now-btn" class="btn btn-success btn-sm">`;
+        previewHtml += `<svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Generate Now`;
         previewHtml += `</button>`;
         previewHtml += '</div>';
+
         previewHtml += '</div>';
 
         $('#preview-container').html(previewHtml);
 
-        // Bind quick preview button
+        // Bind action buttons
         $('#quick-preview-btn').on('click', () => {
             this.showPreview();
+        });
+
+        $('#generate-now-btn').on('click', () => {
+            $('#barcode-generator-form').submit();
         });
     }
 
@@ -216,6 +329,201 @@ class BarcodeGenerator {
         const totalLabels = count * quantity;
 
         $('#estimated-labels-count').text(totalLabels);
+    }
+
+    // Enhanced preview utility methods
+    showPreviewPlaceholder() {
+        const placeholderHtml = `
+            <div class="preview-placeholder">
+                <div class="preview-icon">
+                    <svg class="icon-xl" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 5v14h18V5H3z"/>
+                        <path d="M7 8v8"/>
+                        <path d="M11 8v8"/>
+                        <path d="M15 8v8"/>
+                    </svg>
+                </div>
+                <h6 class="mb-2">Live Preview</h6>
+                <p class="small mb-3">Select products and template to see preview</p>
+                <div class="preview-hint">
+                    <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                    <span>Click Preview to see full details</span>
+                </div>
+            </div>
+        `;
+        $('#preview-container').html(placeholderHtml);
+    }
+
+    showPreviewLoading() {
+        const loadingHtml = `
+            <div class="preview-loading">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted">Generating preview...</p>
+                </div>
+            </div>
+        `;
+        $('#preview-container').html(loadingHtml);
+        $('#preview-container').addClass('loading');
+
+        // Remove loading class after animation
+        setTimeout(() => {
+            $('#preview-container').removeClass('loading');
+        }, 1000);
+    }
+
+    refreshPreview() {
+        this.updatePreviewContainer();
+    }
+
+    // Modal preview methods
+    currentZoom = 1;
+
+    zoomPreview(factor) {
+        this.currentZoom *= factor;
+
+        // Limit zoom range
+        if (this.currentZoom < 0.5) this.currentZoom = 0.5;
+        if (this.currentZoom > 3) this.currentZoom = 3;
+
+        const iframe = $('#preview-iframe');
+        iframe.css('transform', `scale(${this.currentZoom})`);
+
+        // Update zoom display
+        $('#zoom-level').text(`${Math.round(this.currentZoom * 100)}%`);
+
+        // Update button states
+        $('#zoom-out-btn').prop('disabled', this.currentZoom <= 0.5);
+        $('#zoom-in-btn').prop('disabled', this.currentZoom >= 3);
+    }
+
+    printPreview() {
+        const iframe = document.getElementById('preview-iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.print();
+        }
+    }
+
+    updatePreviewStats() {
+        const products = $('#products-select').val();
+        const quantity = parseInt($('input[name="quantity"]').val()) || 1;
+        const totalLabels = products ? products.length * quantity : 0;
+
+        $('#preview-stats').text(`${products ? products.length : 0} products, ${totalLabels} labels total`);
+    }
+
+    onModalShown() {
+        // Reset zoom when modal is shown
+        this.currentZoom = 1;
+        $('#zoom-level').text('100%');
+        $('#zoom-out-btn').prop('disabled', false);
+        $('#zoom-in-btn').prop('disabled', false);
+
+        // Hide loading after iframe loads
+        const iframe = $('#preview-iframe');
+        iframe.on('load', () => {
+            $('#preview-loading').addClass('d-none');
+        });
+    }
+
+    onModalHidden() {
+        // Reset iframe src to stop any ongoing requests
+        $('#preview-iframe').attr('src', 'about:blank');
+        $('#preview-loading').removeClass('d-none');
+    }
+
+    // New enhanced methods
+    resetZoom() {
+        this.currentZoom = 1;
+        const iframe = $('#preview-iframe');
+        iframe.css('transform', 'scale(1)');
+        $('#zoom-level').text('100%');
+        $('#zoom-out-btn').prop('disabled', false);
+        $('#zoom-in-btn').prop('disabled', false);
+    }
+
+    fitToScreen() {
+        // Calculate optimal zoom to fit content
+        const container = $('.preview-iframe-container');
+        const iframe = $('#preview-iframe');
+
+        if (container.length && iframe.length) {
+            const containerWidth = container.width();
+            const containerHeight = container.height();
+            const iframeWidth = iframe[0].contentWindow?.document.body?.scrollWidth || 800;
+            const iframeHeight = iframe[0].contentWindow?.document.body?.scrollHeight || 600;
+
+            const scaleX = containerWidth / iframeWidth;
+            const scaleY = containerHeight / iframeHeight;
+            const optimalScale = Math.min(scaleX, scaleY, 1);
+
+            this.currentZoom = optimalScale;
+            iframe.css('transform', `scale(${optimalScale})`);
+            $('#zoom-level').text(`${Math.round(optimalScale * 100)}%`);
+
+            // Update button states
+            $('#zoom-out-btn').prop('disabled', this.currentZoom <= 0.5);
+            $('#zoom-in-btn').prop('disabled', this.currentZoom >= 3);
+        }
+    }
+
+    refreshModalPreview() {
+        const config = window.BarcodeGeneratorConfig || {};
+        const formData = $('#barcode-generator-form').serialize();
+        const previewUrl = (config.routes?.preview || '/admin/barcode-generator/preview') + '?' + formData;
+
+        // Show loading
+        $('#preview-loading').removeClass('d-none');
+
+        // Reload iframe
+        $('#preview-iframe').attr('src', previewUrl);
+
+        // Update stats
+        this.updatePreviewStats();
+    }
+
+    handleKeyboardShortcuts(e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case '=':
+                case '+':
+                    e.preventDefault();
+                    this.zoomPreview(1.2);
+                    break;
+                case '-':
+                    e.preventDefault();
+                    this.zoomPreview(0.8);
+                    break;
+                case '0':
+                    e.preventDefault();
+                    this.resetZoom();
+                    break;
+                case 'p':
+                    e.preventDefault();
+                    this.printPreview();
+                    break;
+            }
+        }
+
+        if (e.key === 'Escape') {
+            $('#preview-modal').modal('hide');
+        }
+    }
+
+    initializeTooltips() {
+        // Initialize Bootstrap tooltips
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
     }
 
     showSuccess(message) {

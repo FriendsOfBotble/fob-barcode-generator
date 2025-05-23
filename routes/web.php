@@ -30,6 +30,61 @@ Route::group(['namespace' => 'FriendsOfBotble\BarcodeGenerator\Http\Controllers'
                 'permission' => 'barcode-generator.print',
             ]);
 
+            // Test route (remove in production)
+            Route::get('test', [
+                'as' => 'barcode-generator.test',
+                'uses' => 'TestBarcodeController@test',
+                'permission' => 'barcode-generator.index',
+            ]);
+
+            // Setup Wizard routes
+            Route::group(['prefix' => 'setup-wizard', 'as' => 'setup-wizard.'], function (): void {
+                Route::get('/', [
+                    'as' => 'index',
+                    'uses' => 'SetupWizardController@index',
+                    'permission' => 'barcode-generator.settings',
+                ]);
+
+                Route::post('/', [
+                    'as' => 'store',
+                    'uses' => 'SetupWizardController@store',
+                    'permission' => 'barcode-generator.settings',
+                ]);
+
+                Route::post('complete', [
+                    'as' => 'complete',
+                    'uses' => 'SetupWizardController@complete',
+                    'permission' => 'barcode-generator.settings',
+                ]);
+
+                Route::post('skip', [
+                    'as' => 'skip',
+                    'uses' => 'SetupWizardController@skip',
+                    'permission' => 'barcode-generator.settings',
+                ]);
+            });
+
+            // Order barcode routes
+            Route::group(['prefix' => 'orders', 'as' => 'orders.'], function (): void {
+                Route::post('generate', [
+                    'as' => 'generate',
+                    'uses' => 'BarcodeGeneratorController@generateOrderBarcodes',
+                    'permission' => 'barcode-generator.generate',
+                ]);
+
+                Route::get('preview', [
+                    'as' => 'preview',
+                    'uses' => 'BarcodeGeneratorController@previewOrderBarcodes',
+                    'permission' => 'barcode-generator.generate',
+                ]);
+
+                Route::get('download', [
+                    'as' => 'download',
+                    'uses' => 'BarcodeGeneratorController@downloadOrderBarcodes',
+                    'permission' => 'barcode-generator.print',
+                ]);
+            });
+
             // Template routes
             Route::group(['prefix' => 'templates', 'as' => 'barcode-generator.templates.'], function (): void {
                 Route::match(['GET', 'POST'], '/', [
