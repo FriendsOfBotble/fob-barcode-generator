@@ -4,6 +4,7 @@ namespace FriendsOfBotble\BarcodeGenerator\Http\Requests;
 
 use Botble\Base\Rules\OnOffRule;
 use Botble\Support\Http\Requests\Request;
+use FriendsOfBotble\BarcodeGenerator\Enums\BarcodeTypeEnum;
 use Illuminate\Validation\Rule;
 
 class BarcodeTemplateRequest extends Request
@@ -24,7 +25,7 @@ class BarcodeTemplateRequest extends Request
             'padding' => ['required', 'numeric', 'min:0', 'max:20'],
             'columns_per_page' => ['required', 'integer', 'min:1', 'max:10'],
             'rows_per_page' => ['required', 'integer', 'min:1', 'max:20'],
-            'barcode_type' => ['required', 'string', Rule::in(['C128', 'EAN13', 'EAN8', 'UPCA', 'UPCE'])],
+            'barcode_type' => ['required', 'string', Rule::in(array_keys(BarcodeTypeEnum::labels()))],
             'barcode_width' => ['required', 'numeric', 'min:10', 'max:200'],
             'barcode_height' => ['required', 'numeric', 'min:5', 'max:100'],
             'include_text' => [new OnOffRule()],

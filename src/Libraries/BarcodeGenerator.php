@@ -184,6 +184,9 @@ class BarcodeGenerator
                 return $this->generateEAN13($data);
             case 'EAN8':
                 return $this->generateEAN8($data);
+            case 'QRCODE':
+                // QR codes are handled separately in the service layer
+                throw new \InvalidArgumentException('QR codes should be generated using the service layer');
             case 'CODE128':
             default:
                 return $this->generateCode128($data);

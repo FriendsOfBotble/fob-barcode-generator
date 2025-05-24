@@ -4,8 +4,7 @@ use FriendsOfBotble\BarcodeGenerator\Enums\BarcodeTypeEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         // Update existing barcode types to use new enum values

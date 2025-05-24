@@ -52,7 +52,10 @@ class BarcodeTemplateController extends BaseController
         Assets::addStylesDirectly('vendor/core/plugins/fob-barcode-generator/css/barcode-generator.css')
             ->addScriptsDirectly('vendor/core/plugins/fob-barcode-generator/js/barcode-generator.js');
 
-        return BarcodeTemplateForm::createFromModel($template)->renderForm();
+        return BarcodeTemplateForm::createFromModel($template)
+            ->setMethod('PUT')
+            ->setUrl(route('barcode-generator.templates.update', $template->getKey()))
+            ->renderForm();
     }
 
     public function update(BarcodeTemplate $template, BarcodeTemplateRequest $request): BaseHttpResponse

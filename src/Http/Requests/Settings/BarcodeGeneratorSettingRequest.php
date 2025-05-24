@@ -4,6 +4,7 @@ namespace FriendsOfBotble\BarcodeGenerator\Http\Requests\Settings;
 
 use Botble\Base\Rules\OnOffRule;
 use Botble\Support\Http\Requests\Request;
+use FriendsOfBotble\BarcodeGenerator\Enums\BarcodeTypeEnum;
 use Illuminate\Validation\Rule;
 
 class BarcodeGeneratorSettingRequest extends Request
@@ -11,7 +12,7 @@ class BarcodeGeneratorSettingRequest extends Request
     public function rules(): array
     {
         return [
-            'barcode_generator_default_type' => ['required', 'string', Rule::in(['C128', 'EAN13', 'EAN8', 'UPCA', 'UPCE'])],
+            'barcode_generator_default_type' => ['required', 'string', Rule::in(BarcodeTypeEnum::values())],
             'barcode_generator_default_width' => ['required', 'numeric', 'min:10', 'max:200'],
             'barcode_generator_default_height' => ['required', 'numeric', 'min:5', 'max:100'],
             'barcode_generator_include_text' => [new OnOffRule()],
@@ -36,6 +37,21 @@ class BarcodeGeneratorSettingRequest extends Request
             'barcode_generator_border_enabled' => [new OnOffRule()],
             'barcode_generator_border_width' => ['required', 'numeric', 'min:0.1', 'max:5'],
             'barcode_generator_border_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            // Field display settings
+            'barcode_generator_show_product_name' => [new OnOffRule()],
+            'barcode_generator_show_product_sku' => [new OnOffRule()],
+            'barcode_generator_show_product_barcode' => [new OnOffRule()],
+            'barcode_generator_show_product_price' => [new OnOffRule()],
+            'barcode_generator_show_product_sale_price' => [new OnOffRule()],
+            'barcode_generator_show_product_brand' => [new OnOffRule()],
+            'barcode_generator_show_product_category' => [new OnOffRule()],
+            'barcode_generator_show_product_attributes' => [new OnOffRule()],
+            'barcode_generator_show_product_description' => [new OnOffRule()],
+            'barcode_generator_show_product_weight' => [new OnOffRule()],
+            'barcode_generator_show_product_dimensions' => [new OnOffRule()],
+            'barcode_generator_show_product_stock' => [new OnOffRule()],
+            'barcode_generator_show_current_date' => [new OnOffRule()],
+            'barcode_generator_show_company_name' => [new OnOffRule()],
         ];
     }
 }

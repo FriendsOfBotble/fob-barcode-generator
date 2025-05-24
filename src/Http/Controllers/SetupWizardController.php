@@ -106,7 +106,7 @@ class SetupWizardController extends BaseController
         $printerType = Setting::get('barcode_generator_printer_type', 'office');
         $paperSize = Setting::get('barcode_generator_default_paper_size', PaperSizeEnum::A4);
         $barcodeType = Setting::get('barcode_generator_default_barcode_type', BarcodeTypeEnum::CODE128);
-        $templateName = $request->input('template_name', 'Default Template');
+        $templateName = $request->input('template_name', trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard_ui.default_template_value'));
 
         // Create template based on printer type
         $template = match ($printerType) {
@@ -123,7 +123,7 @@ class SetupWizardController extends BaseController
     {
         return BarcodeTemplate::create([
             'name' => $name,
-            'description' => 'Auto-generated template from setup wizard',
+            'description' => trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.auto_generated_description'),
             'paper_size' => $paperSize,
             'barcode_type' => $barcodeType,
             'template_html' => $this->getOfficeTemplateHtml(),
@@ -148,7 +148,7 @@ class SetupWizardController extends BaseController
 
         return BarcodeTemplate::create([
             'name' => $name,
-            'description' => 'Auto-generated thermal template from setup wizard',
+            'description' => trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.auto_generated_thermal_description'),
             'paper_size' => $paperSize,
             'barcode_type' => $barcodeType,
             'template_html' => $this->getThermalTemplateHtml(),

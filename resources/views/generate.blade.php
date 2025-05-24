@@ -72,8 +72,8 @@
                             <div class="col-md-6">
                                 <div class="text-end">
                                     <small class="text-muted">
-                                        <span id="selected-products-count">0</span> products selected,
-                                        <span id="estimated-labels-count">0</span> labels total
+                                        <span id="selected-products-count">0</span> {{ trans('plugins/fob-barcode-generator::barcode-generator.ui.products_selected') }},
+                                        <span id="estimated-labels-count">0</span> {{ trans('plugins/fob-barcode-generator::barcode-generator.ui.labels_total') }}
                                     </small>
                                 </div>
                             </div>
@@ -107,18 +107,18 @@
                             <div class="preview-icon">
                                 <x-core::icon name="ti ti-barcode" class="icon-xl" />
                             </div>
-                            <h6 class="mb-2">Live Preview</h6>
-                            <p class="small mb-3">Select products and template to see preview</p>
+                            <h6 class="mb-2">{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.live_preview') }}</h6>
+                            <p class="small mb-3">{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.select_products_template_preview') }}</p>
                             <div class="preview-hint">
                                 <x-core::icon name="ti ti-info-circle" class="icon" />
-                                <span>Click Preview to see full details</span>
+                                <span>{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.click_preview_details') }}</span>
                             </div>
                         </div>
                         <div class="preview-loading d-none" id="preview-loading-mini">
                             <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden">{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.loading') }}</span>
                             </div>
-                            <div class="loading-text">Generating preview...</div>
+                            <div class="loading-text">{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.generating_preview') }}</div>
                         </div>
                     </div>
                 </div>
@@ -133,7 +133,7 @@
                 <div class="modal-header bg-light justify-content-between">
                     <div class="d-flex align-items-center">
                         <x-core::icon name="ti ti-eye" class="me-2 text-primary" />
-                        <h5 class="modal-title mb-0">Barcode Labels Preview</h5>
+                        <h5 class="modal-title mb-0">{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.title') }} {{ trans('plugins/fob-barcode-generator::barcode-generator.generate.preview') }}</h5>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <div class="preview-controls">
@@ -168,9 +168,9 @@
                         <div class="d-flex align-items-center justify-content-center h-100">
                             <div class="text-center">
                                 <div class="spinner-border text-primary mb-3" role="status">
-                                    <span class="visually-hidden">Loading...</span>
+                                    <span class="visually-hidden">{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.loading') }}</span>
                                 </div>
-                                <p class="text-muted mb-2">Generating preview...</p>
+                                <p class="text-muted mb-2">{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.generating_preview') }}</p>
                                 <div class="progress" style="width: 200px; margin: 0 auto;">
                                     <div class="progress-bar progress-bar-striped progress-bar-animated"
                                          role="progressbar" style="width: 100%"></div>
@@ -183,7 +183,7 @@
                         <div class="preview-overlay d-none" id="preview-overlay">
                             <div class="preview-overlay-content">
                                 <x-core::icon name="ti ti-zoom-in" class="mb-2" />
-                                <p class="mb-0">Click to zoom</p>
+                                <p class="mb-0">{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.click_preview_details') }}</p>
                             </div>
                         </div>
                     </div>
@@ -237,6 +237,23 @@
                 noTemplateSelected: '{{ trans('plugins/fob-barcode-generator::barcode-generator.messages.no_template_selected') }}',
                 selectProducts: '{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.select_products') }}',
                 selectTemplate: '{{ trans('plugins/fob-barcode-generator::barcode-generator.generate.select_template') }}'
+            },
+            ui: {
+                products_selected: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.products_selected') }}',
+                labels_total: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.labels_total') }}',
+                label_preview: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.label_preview') }}',
+                products: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.products') }}',
+                qty_each: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.qty_each') }}',
+                total_labels: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.total_labels') }}',
+                template: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.template') }}',
+                full_preview: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.full_preview') }}',
+                generate_now: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.generate_now') }}',
+                live_preview: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.live_preview') }}',
+                select_products_template_preview: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.select_products_template_preview') }}',
+                click_preview_details: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.click_preview_details') }}',
+                loading: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.loading') }}',
+                generating_preview: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.generating_preview') }}',
+                an_error_occurred: '{{ trans('plugins/fob-barcode-generator::barcode-generator.ui.an_error_occurred') }}'
             },
             preselected: {
                 products: @json($selectedProductIds ?? []),

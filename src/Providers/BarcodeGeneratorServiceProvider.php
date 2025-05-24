@@ -21,6 +21,8 @@ class BarcodeGeneratorServiceProvider extends ServiceProvider
             ->loadAndPublishConfigurations(['permissions'])
             ->loadMigrations()
             ->loadAndPublishTranslations()
+            ->loadMigrations()
+            ->publishAssets()
             ->loadAndPublishViews()
             ->loadRoutes();
 

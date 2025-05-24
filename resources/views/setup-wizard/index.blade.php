@@ -8,9 +8,9 @@
                     <div class="card-header">
                         <h4 class="card-title mb-0">
                             <x-core::icon name="ti ti-wand" />
-                            Barcode Generator Setup Wizard
+                            {{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.title') }}
                         </h4>
-                        <p class="text-muted mb-0">Let's set up your barcode generator with optimal settings for your printer and needs</p>
+                        <p class="text-muted mb-0">{{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.description') }}</p>
                     </div>
                     <div class="card-body">
                         <!-- Progress Steps -->
@@ -19,19 +19,19 @@
                                 <div class="progress-steps">
                                     <div class="step active" data-step="1">
                                         <div class="step-number">1</div>
-                                        <div class="step-title">Printer Type</div>
+                                        <div class="step-title">{{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.step1.title') }}</div>
                                     </div>
                                     <div class="step" data-step="2">
                                         <div class="step-number">2</div>
-                                        <div class="step-title">Paper Size</div>
+                                        <div class="step-title">{{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.step2.title') }}</div>
                                     </div>
                                     <div class="step" data-step="3">
                                         <div class="step-number">3</div>
-                                        <div class="step-title">Barcode Type</div>
+                                        <div class="step-title">{{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.step3.title') }}</div>
                                     </div>
                                     <div class="step" data-step="4">
                                         <div class="step-number">4</div>
-                                        <div class="step-title">Template</div>
+                                        <div class="step-title">{{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.step4.title') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -112,7 +112,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">{{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard.template_name') }}</label>
-                                        <input type="text" class="form-control" id="template-name" value="Default Template" required>
+                                        <input type="text" class="form-control" id="template-name" value="{{ trans('plugins/fob-barcode-generator::barcode-generator.setup_wizard_ui.default_template_value') }}" required>
                                     </div>
                                 </div>
                             </div>

@@ -248,27 +248,28 @@ class BarcodeGenerator {
         let previewHtml = '<div class="preview-summary slide-in">';
 
         // Header
-        previewHtml += `<h6><svg class="icon me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5v14h18V5H3z"/><path d="M7 8v8"/><path d="M11 8v8"/><path d="M15 8v8"/></svg> Label Preview</h6>`;
+        const ui = config.ui || {};
+        previewHtml += `<h6><svg class="icon me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5v14h18V5H3z"/><path d="M7 8v8"/><path d="M11 8v8"/><path d="M15 8v8"/></svg> ${ui.label_preview || 'Label Preview'}</h6>`;
 
         // Stats grid
         previewHtml += '<div class="preview-stats">';
         previewHtml += `<div class="stat-item">`;
         previewHtml += `<span class="stat-value">${products.length}</span>`;
-        previewHtml += `<span class="stat-label">Products</span>`;
+        previewHtml += `<span class="stat-label">${ui.products || 'Products'}</span>`;
         previewHtml += `</div>`;
         previewHtml += `<div class="stat-item">`;
         previewHtml += `<span class="stat-value">${quantity}</span>`;
-        previewHtml += `<span class="stat-label">Qty Each</span>`;
+        previewHtml += `<span class="stat-label">${ui.qty_each || 'Qty Each'}</span>`;
         previewHtml += `</div>`;
         previewHtml += `<div class="stat-item">`;
         previewHtml += `<span class="stat-value">${totalLabels}</span>`;
-        previewHtml += `<span class="stat-label">Total Labels</span>`;
+        previewHtml += `<span class="stat-label">${ui.total_labels || 'Total Labels'}</span>`;
         previewHtml += `</div>`;
         previewHtml += '</div>';
 
         // Template info
         previewHtml += `<div class="mb-3">`;
-        previewHtml += `<strong><svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/><path d="M8 16h8"/><path d="M8 8h8"/></svg> Template:</strong> ${templateText}`;
+        previewHtml += `<strong><svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/><path d="M8 16h8"/><path d="M8 8h8"/></svg> ${ui.template || 'Template'}:</strong> ${templateText}`;
         previewHtml += `</div>`;
 
         // Selected products list
@@ -293,10 +294,10 @@ class BarcodeGenerator {
         // Action buttons
         previewHtml += '<div class="preview-actions">';
         previewHtml += `<button type="button" id="quick-preview-btn" class="btn btn-primary btn-sm">`;
-        previewHtml += `<svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Full Preview`;
+        previewHtml += `<svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${ui.full_preview || 'Full Preview'}`;
         previewHtml += `</button>`;
         previewHtml += `<button type="button" id="generate-now-btn" class="btn btn-success btn-sm">`;
-        previewHtml += `<svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Generate Now`;
+        previewHtml += `<svg class="icon me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ${ui.generate_now || 'Generate Now'}`;
         previewHtml += `</button>`;
         previewHtml += '</div>';
 
@@ -333,6 +334,8 @@ class BarcodeGenerator {
 
     // Enhanced preview utility methods
     showPreviewPlaceholder() {
+        const config = window.BarcodeGeneratorConfig || {};
+        const ui = config.ui || {};
         const placeholderHtml = `
             <div class="preview-placeholder">
                 <div class="preview-icon">
@@ -343,15 +346,15 @@ class BarcodeGenerator {
                         <path d="M15 8v8"/>
                     </svg>
                 </div>
-                <h6 class="mb-2">Live Preview</h6>
-                <p class="small mb-3">Select products and template to see preview</p>
+                <h6 class="mb-2">${ui.live_preview || 'Live Preview'}</h6>
+                <p class="small mb-3">${ui.select_products_template_preview || 'Select products and template to see preview'}</p>
                 <div class="preview-hint">
                     <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 16v-4"/>
                         <path d="M12 8h.01"/>
                     </svg>
-                    <span>Click Preview to see full details</span>
+                    <span>${ui.click_preview_details || 'Click Preview to see full details'}</span>
                 </div>
             </div>
         `;
@@ -359,13 +362,15 @@ class BarcodeGenerator {
     }
 
     showPreviewLoading() {
+        const config = window.BarcodeGeneratorConfig || {};
+        const ui = config.ui || {};
         const loadingHtml = `
             <div class="preview-loading">
                 <div class="text-center">
                     <div class="spinner-border text-primary mb-3" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                        <span class="visually-hidden">${ui.loading || 'Loading...'}</span>
                     </div>
-                    <p class="text-muted">Generating preview...</p>
+                    <p class="text-muted">${ui.generating_preview || 'Generating preview...'}</p>
                 </div>
             </div>
         `;
@@ -546,7 +551,9 @@ class BarcodeGenerator {
         if (typeof Botble !== 'undefined' && Botble.handleError) {
             Botble.handleError(xhr);
         } else {
-            let message = 'An error occurred';
+            const config = window.BarcodeGeneratorConfig || {};
+            const ui = config.ui || {};
+            let message = ui.an_error_occurred || 'An error occurred';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 message = xhr.responseJSON.message;
             }

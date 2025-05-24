@@ -2,6 +2,10 @@
 
 namespace FriendsOfBotble\BarcodeGenerator\Services;
 
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Botble\Ecommerce\Models\Order;
 use Botble\Ecommerce\Models\Product;
 use Botble\Setting\Facades\Setting;
@@ -47,6 +51,11 @@ class BarcodeGeneratorService
             $type = BarcodeTypeEnum::CODE128;
         }
 
+        // Handle QR code generation separately
+        if ($type === BarcodeTypeEnum::QRCODE) {
+            return $this->generateQRCode($data, $format);
+        }
+
         $barcodeType = $this->barcodeTypes[$type];
 
         if ($format === 'svg') {
@@ -54,6 +63,22 @@ class BarcodeGeneratorService
         }
 
         throw new \InvalidArgumentException("Unsupported format: {$format}");
+    }
+
+    protected function generateQRCode(string $data, string $format = 'svg'): string
+    {
+        if ($format !== 'svg') {
+            throw new \InvalidArgumentException('QR codes only support SVG format');
+        }
+
+        $renderer = new ImageRenderer(
+            new RendererStyle(200),
+            new SvgImageBackEnd()
+        );
+
+        $writer = new Writer($renderer);
+
+        return $writer->writeString($data);
     }
 
     protected function normalizeBarcodeType(string $type): string
@@ -150,7 +175,7 @@ class BarcodeGeneratorService
 
     protected function generateSingleLabel(Product $product, BarcodeTemplate $template): string
     {
-        $html = '<div class="label">';
+        $html = '<div class="label" data-barcode-type="' . e($template->barcode_type) . '">';
 
         // Generate barcode
         if ($product->barcode || $product->sku) {
@@ -159,13 +184,24 @@ class BarcodeGeneratorService
             $html .= '<div class="barcode">' . $barcodeSvg . '</div>';
         }
 
-        // Add text fields based on template configuration
-        if ($template->fields && is_array($template->fields)) {
-            foreach ($template->fields as $field) {
-                $value = $this->getProductFieldValue($product, $field);
-                if ($value) {
-                    $html .= '<div class="field field-' . $field . '">' . e($value) . '</div>';
-                }
+        // Add text fields based on global settings or template configuration
+        $fieldsToShow = [];
+
+        // Check if we should use global field display settings
+        $enabledFields = barcode_generator_get_enabled_fields();
+        if (! empty($enabledFields)) {
+            $fieldsToShow = $enabledFields;
+        } elseif ($template->fields && is_array($template->fields)) {
+            // Fallback to template configuration if no global settings
+            $fieldsToShow = $template->fields;
+        }
+
+        foreach ($fieldsToShow as $field) {
+            $value = $this->getProductFieldValue($product, $field);
+            if ($value) {
+                // Determine if field should be multiline based on content length
+                $fieldClass = strlen($value) > 30 ? 'field multiline field-' . $field : 'field single-line field-' . $field;
+                $html .= '<div class="' . $fieldClass . '">' . e($value) . '</div>';
             }
         }
 
@@ -251,10 +287,25 @@ class BarcodeGeneratorService
         $css .= 'gap: 2mm; ';
         $css .= '}';
 
+        // Calculate responsive barcode sizing
+        $labelWidth = $template->label_width;
+        $labelHeight = $template->label_height;
+        $padding = $template->padding;
+        $barcodeWidth = $template->barcode_width;
+        $barcodeHeight = $template->barcode_height;
+
+        // Calculate available space for barcode (label size minus padding)
+        $availableWidth = $labelWidth - ($padding * 2);
+        $availableHeight = $labelHeight - ($padding * 2);
+
+        // Ensure barcode doesn't exceed available space
+        $maxBarcodeWidth = min($barcodeWidth, $availableWidth);
+        $maxBarcodeHeight = min($barcodeHeight, $availableHeight * 0.7); // Leave space for text
+
         $css .= '.label { ';
-        $css .= 'width: ' . $template->label_width . 'mm; ';
-        $css .= 'height: ' . $template->label_height . 'mm; ';
-        $css .= 'padding: ' . $template->padding . 'mm; ';
+        $css .= 'width: ' . $labelWidth . 'mm; ';
+        $css .= 'height: ' . $labelHeight . 'mm; ';
+        $css .= 'padding: ' . $padding . 'mm; ';
         $css .= 'border: 1px solid #ccc; ';
         $css .= 'display: flex; ';
         $css .= 'flex-direction: column; ';
@@ -262,21 +313,41 @@ class BarcodeGeneratorService
         $css .= 'justify-content: center; ';
         $css .= 'text-align: center; ';
         $css .= 'box-sizing: border-box; ';
+        $css .= 'overflow: hidden; ';
+        $css .= 'position: relative; ';
         $css .= '}';
 
         $css .= '.barcode { ';
-        $css .= 'width: ' . $template->barcode_width . 'mm; ';
-        $css .= 'height: ' . $template->barcode_height . 'mm; ';
+        $css .= 'display: flex; ';
+        $css .= 'justify-content: center; ';
+        $css .= 'align-items: center; ';
+        $css .= 'width: 100%; ';
+        $css .= 'max-height: 70%; ';
         $css .= 'margin-bottom: 2mm; ';
         $css .= '}';
 
-        $css .= '.barcode svg { width: 100%; height: 100%; }';
+        $css .= '.barcode svg, .barcode img { ';
+        $css .= 'max-width: ' . $maxBarcodeWidth . 'mm; ';
+        $css .= 'max-height: ' . $maxBarcodeHeight . 'mm; ';
+        $css .= 'width: auto; ';
+        $css .= 'height: auto; ';
+        $css .= 'display: block; ';
+        $css .= '}';
 
         $css .= '.field { ';
         $css .= 'font-size: ' . $template->text_size . 'pt; ';
         $css .= 'line-height: 1.2; ';
-        $css .= 'margin: 1mm 0; ';
+        $css .= 'margin: 0.5mm 0; ';
         $css .= 'word-wrap: break-word; ';
+        $css .= 'overflow: hidden; ';
+        $css .= 'text-overflow: ellipsis; ';
+        $css .= 'white-space: nowrap; ';
+        $css .= '}';
+
+        $css .= '.field.multiline { ';
+        $css .= 'white-space: normal; ';
+        $css .= 'max-height: 25%; ';
+        $css .= 'overflow: hidden; ';
         $css .= '}';
 
         $css .= '</style>';
@@ -378,19 +449,29 @@ class BarcodeGeneratorService
             if ($barcodeData) {
                 $barcodeSvg = $this->generateBarcode($barcodeData, $template->barcode_type, 'svg');
                 $barcodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($barcodeSvg);
-                $html = str_replace('{barcode_image}', $barcodeDataUri, $html);
+
+                // Wrap barcode in container for proper sizing
+                $barcodeHtml = '<div class="barcode-container"><img src="' . $barcodeDataUri . '" alt="Barcode" /></div>';
+                $html = str_replace('{barcode_image}', $barcodeHtml, $html);
             } else {
                 $html = str_replace('{barcode_image}', '', $html);
             }
         }
 
-        // Replace product fields
+        // Replace product fields based on enabled settings
         $availableFields = (new BarcodeTemplate())->getAvailableFields();
+        $enabledFields = barcode_generator_get_enabled_fields();
+
         foreach ($availableFields as $field => $label) {
             $placeholder = '{' . $field . '}';
             if (strpos($html, $placeholder) !== false) {
-                $value = $this->getProductFieldValue($product, $field) ?: '';
-                $html = str_replace($placeholder, e($value), $html);
+                // Check if field is enabled in settings, if not replace with empty string
+                if (! empty($enabledFields) && ! in_array($field, $enabledFields)) {
+                    $html = str_replace($placeholder, '', $html);
+                } else {
+                    $value = $this->getProductFieldValue($product, $field) ?: '';
+                    $html = str_replace($placeholder, e($value), $html);
+                }
             }
         }
 
@@ -405,7 +486,10 @@ class BarcodeGeneratorService
         if (strpos($html, '{barcode_image}') !== false) {
             $barcodeSvg = $this->generateOrderBarcode($order, 'svg');
             $barcodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($barcodeSvg);
-            $html = str_replace('{barcode_image}', $barcodeDataUri, $html);
+
+            // Wrap barcode in container for proper sizing
+            $barcodeHtml = '<div class="barcode-container"><img src="' . $barcodeDataUri . '" alt="Order Barcode" /></div>';
+            $html = str_replace('{barcode_image}', $barcodeHtml, $html);
         }
 
         // Replace order fields
@@ -464,18 +548,89 @@ class BarcodeGeneratorService
 
     protected function getDefaultCustomCSS(BarcodeTemplate $template): string
     {
+        $labelWidth = $template->label_width ?: 70;
+        $labelHeight = $template->label_height ?: 30;
+        $padding = $template->padding ?: 2;
+        $barcodeWidth = $template->barcode_width ?: ($labelWidth * 0.8);
+        $barcodeHeight = $template->barcode_height ?: ($labelHeight * 0.6);
+
+        // Calculate available space for barcode (label size minus padding)
+        $availableWidth = $labelWidth - ($padding * 2);
+        $availableHeight = $labelHeight - ($padding * 2);
+
+        // Ensure barcode doesn't exceed available space
+        $maxBarcodeWidth = min($barcodeWidth, $availableWidth);
+        $maxBarcodeHeight = min($barcodeHeight, $availableHeight * 0.7); // Leave space for text
+
+        // Add barcode type specific styles
+        $barcodeTypeClass = '';
+        $maxBarcodeHeightPercent = '70%';
+        $textMaxHeight = '25%';
+
+        if ($template->barcode_type === 'QRCODE') {
+            $barcodeTypeClass = 'qr-label';
+            $maxBarcodeHeightPercent = '80%';
+            $textMaxHeight = '15%';
+        } elseif (in_array($template->barcode_type, ['CODE128', 'EAN13', 'EAN8', 'UPCA', 'UPCE'])) {
+            $barcodeTypeClass = 'linear-label';
+            $maxBarcodeHeightPercent = '60%';
+            $textMaxHeight = '35%';
+        }
+
         return '@media print { .page-break { page-break-before: always; } }
 body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
 .label {
-    width: ' . ($template->label_width ?: 70) . 'mm;
-    height: ' . ($template->label_height ?: 30) . 'mm;
-    padding: ' . ($template->padding ?: 2) . 'mm;
+    width: ' . $labelWidth . 'mm;
+    height: ' . $labelHeight . 'mm;
+    padding: ' . $padding . 'mm;
     border: 1px solid #ccc;
     margin: ' . ($template->gap_vertical ?: 2) . 'mm ' . ($template->gap_horizontal ?: 2) . 'mm;
     display: inline-block;
     text-align: center;
     box-sizing: border-box;
     vertical-align: top;
+    overflow: hidden;
+    position: relative;
+}
+.label[data-barcode-type="' . $template->barcode_type . '"] .barcode-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-height: ' . $maxBarcodeHeightPercent . ';
+    margin-bottom: 2mm;
+}
+.label[data-barcode-type="' . $template->barcode_type . '"] .barcode-container svg,
+.label[data-barcode-type="' . $template->barcode_type . '"] .barcode-container img {
+    max-width: ' . $maxBarcodeWidth . 'mm;
+    max-height: ' . $maxBarcodeHeight . 'mm;
+    width: auto;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+.label[data-barcode-type="QRCODE"] .barcode-container svg,
+.label[data-barcode-type="QRCODE"] .barcode-container img {
+    aspect-ratio: 1;
+    max-width: min(' . $maxBarcodeWidth . 'mm, 80%);
+    max-height: min(' . $maxBarcodeHeight . 'mm, 80%);
+}
+.label .field {
+    font-size: ' . ($template->text_size ?: 8) . 'pt;
+    line-height: 1.1;
+    margin: 0.5mm 0;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-height: ' . $textMaxHeight . ';
+}
+.label .field.multiline {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }';
     }
 
@@ -512,18 +667,20 @@ body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
 
     protected function generateSingleOrderLabel(Order $order, BarcodeTemplate $template): string
     {
-        $html = '<div class="label">';
+        $html = '<div class="label" data-barcode-type="' . e($template->barcode_type) . '">';
 
         // Generate barcode for order
         $barcodeSvg = $this->generateOrderBarcode($order, 'svg');
         $html .= '<div class="barcode">' . $barcodeSvg . '</div>';
 
         // Add order information
-        $html .= '<div class="field field-order-code">' . e($order->code) . '</div>';
-        $html .= '<div class="field field-order-date">' . e($order->created_at->format('Y-m-d')) . '</div>';
+        $html .= '<div class="field single-line field-order-code">' . e($order->code) . '</div>';
+        $html .= '<div class="field single-line field-order-date">' . e($order->created_at->format('Y-m-d')) . '</div>';
 
         if ($order->user) {
-            $html .= '<div class="field field-customer">' . e($order->user->name) . '</div>';
+            $customerName = $order->user->name;
+            $fieldClass = strlen($customerName) > 30 ? 'field multiline field-customer' : 'field single-line field-customer';
+            $html .= '<div class="' . $fieldClass . '">' . e($customerName) . '</div>';
         }
 
         $html .= '</div>';

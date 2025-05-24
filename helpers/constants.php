@@ -14,7 +14,7 @@ if (! function_exists('barcode_generator_setting')) {
      */
     function barcode_generator_setting(string $key, $default = null)
     {
-        return get_setting("barcode_generator_{$key}", $default);
+        return setting("barcode_generator_{$key}", $default);
     }
 }
 
@@ -50,6 +50,21 @@ if (! function_exists('barcode_generator_default_settings')) {
             'border_enabled' => false,
             'border_width' => 1,
             'border_color' => '#000000',
+            // Field display settings
+            'show_product_name' => true,
+            'show_product_sku' => true,
+            'show_product_barcode' => false,
+            'show_product_price' => true,
+            'show_product_sale_price' => false,
+            'show_product_brand' => false,
+            'show_product_category' => false,
+            'show_product_attributes' => false,
+            'show_product_description' => false,
+            'show_product_weight' => false,
+            'show_product_dimensions' => false,
+            'show_product_stock' => false,
+            'show_current_date' => false,
+            'show_company_name' => false,
         ];
     }
 }
@@ -69,5 +84,41 @@ if (! function_exists('barcode_generator_get_appearance_settings')) {
             'border_width' => barcode_generator_setting('border_width', 1),
             'border_color' => barcode_generator_setting('border_color', '#000000'),
         ];
+    }
+}
+
+if (! function_exists('barcode_generator_get_enabled_fields')) {
+    /**
+     * Get enabled product fields for barcode generation
+     *
+     * @return array
+     */
+    function barcode_generator_get_enabled_fields(): array
+    {
+        $enabledFields = [];
+        $availableFields = [
+            'product_name',
+            'product_sku',
+            'product_barcode',
+            'product_price',
+            'product_sale_price',
+            'product_brand',
+            'product_category',
+            'product_attributes',
+            'product_description',
+            'product_weight',
+            'product_dimensions',
+            'product_stock',
+            'current_date',
+            'company_name',
+        ];
+
+        foreach ($availableFields as $field) {
+            if (barcode_generator_setting("show_{$field}", false)) {
+                $enabledFields[] = $field;
+            }
+        }
+
+        return $enabledFields;
     }
 }

@@ -15,6 +15,7 @@ use Botble\Base\Forms\Fields\OnOffCheckboxField;
 use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Setting\Forms\SettingForm;
+use FriendsOfBotble\BarcodeGenerator\Enums\BarcodeTypeEnum;
 use FriendsOfBotble\BarcodeGenerator\Http\Requests\Settings\BarcodeGeneratorSettingRequest;
 
 class BarcodeGeneratorSettingForm extends SettingForm
@@ -31,32 +32,15 @@ class BarcodeGeneratorSettingForm extends SettingForm
                 'help_info',
                 HtmlField::class,
                 HtmlFieldOption::make()
-                    ->content('
-                        <div class="alert alert-info">
-                            <h6><i class="ti ti-info-circle me-2"></i>' . trans('plugins/fob-barcode-generator::barcode-generator.settings.help_title') . '</h6>
-                            <p class="mb-2">' . trans('plugins/fob-barcode-generator::barcode-generator.settings.help_description') . '</p>
-                            <ul class="mb-0">
-                                <li>' . trans('plugins/fob-barcode-generator::barcode-generator.settings.help_tip_1') . '</li>
-                                <li>' . trans('plugins/fob-barcode-generator::barcode-generator.settings.help_tip_2') . '</li>
-                                <li>' . trans('plugins/fob-barcode-generator::barcode-generator.settings.help_tip_3') . '</li>
-                                <li>' . trans('plugins/fob-barcode-generator::barcode-generator.settings.help_tip_4') . '</li>
-                            </ul>
-                        </div>
-                    ')
+                    ->content(view('plugins/fob-barcode-generator::partials.help-info')->render())
             )
             ->add(
                 'barcode_generator_default_type',
                 SelectField::class,
                 SelectFieldOption::make()
                     ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.default_barcode_type'))
-                    ->choices([
-                        'C128' => trans('plugins/fob-barcode-generator::barcode-generator.barcode_types.C128'),
-                        'EAN13' => trans('plugins/fob-barcode-generator::barcode-generator.barcode_types.EAN13'),
-                        'EAN8' => trans('plugins/fob-barcode-generator::barcode-generator.barcode_types.EAN8'),
-                        'UPCA' => trans('plugins/fob-barcode-generator::barcode-generator.barcode_types.UPCA'),
-                        'UPCE' => trans('plugins/fob-barcode-generator::barcode-generator.barcode_types.UPCE'),
-                    ])
-                    ->defaultValue(setting('barcode_generator_default_type', 'C128'))
+                    ->choices(BarcodeTypeEnum::labels())
+                    ->defaultValue(setting('barcode_generator_default_type', BarcodeTypeEnum::CODE128))
             )
             ->add(
                 'barcode_generator_default_width',
@@ -101,7 +85,6 @@ class BarcodeGeneratorSettingForm extends SettingForm
                     ->defaultValue(setting('barcode_generator_text_size', 8))
                     ->attributes(['min' => 6, 'max' => 20, 'step' => 1])
             )
-            ->addOpenCollapsible('label_settings', trans('plugins/fob-barcode-generator::barcode-generator.settings.label_settings'))
             ->add(
                 'barcode_generator_label_width',
                 NumberField::class,
@@ -134,8 +117,6 @@ class BarcodeGeneratorSettingForm extends SettingForm
                     ->defaultValue(setting('barcode_generator_label_padding', 2))
                     ->attributes(['min' => 0, 'max' => 20, 'step' => 0.1])
             )
-            ->addCloseCollapsible('label_settings')
-            ->addOpenCollapsible('paper_settings', trans('plugins/fob-barcode-generator::barcode-generator.settings.paper_settings'))
             ->add(
                 'barcode_generator_paper_size',
                 SelectField::class,
@@ -177,8 +158,6 @@ class BarcodeGeneratorSettingForm extends SettingForm
                     ->defaultValue(setting('barcode_generator_rows_per_page', 10))
                     ->attributes(['min' => 1, 'max' => 20, 'step' => 1])
             )
-            ->addCloseCollapsible('paper_settings')
-            ->addOpenCollapsible('advanced_settings', trans('plugins/fob-barcode-generator::barcode-generator.settings.advanced_settings'))
             ->add(
                 'barcode_generator_auto_generate_sku',
                 OnOffCheckboxField::class,
@@ -213,8 +192,6 @@ class BarcodeGeneratorSettingForm extends SettingForm
                     ->attributes(['min' => 10, 'max' => 1000, 'step' => 10])
                     ->helperText(trans('plugins/fob-barcode-generator::barcode-generator.settings.max_products_per_batch_help'))
             )
-            ->addCloseCollapsible('advanced_settings')
-            ->addOpenCollapsible('appearance_settings', trans('plugins/fob-barcode-generator::barcode-generator.settings.appearance_settings'))
             ->add(
                 'barcode_generator_background_color',
                 ColorField::class,
@@ -256,47 +233,115 @@ class BarcodeGeneratorSettingForm extends SettingForm
                     ->defaultValue(setting('barcode_generator_border_color', '#000000'))
                     ->helperText(trans('plugins/fob-barcode-generator::barcode-generator.settings.border_color_help'))
             )
-            ->addCloseCollapsible('appearance_settings')
-            ->addOpenCollapsible('reset_settings', trans('plugins/fob-barcode-generator::barcode-generator.settings.reset_settings'))
+            ->add(
+                'field_display_info',
+                HtmlField::class,
+                HtmlFieldOption::make()
+                    ->content(view('plugins/fob-barcode-generator::partials.field-display-info')->render())
+            )
+            ->add(
+                'barcode_generator_show_product_name',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_name'))
+                    ->defaultValue(setting('barcode_generator_show_product_name', false))
+            )
+            ->add(
+                'barcode_generator_show_product_sku',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_sku'))
+                    ->defaultValue(setting('barcode_generator_show_product_sku', true))
+            )
+            ->add(
+                'barcode_generator_show_product_barcode',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_barcode'))
+                    ->defaultValue(setting('barcode_generator_show_product_barcode', false))
+            )
+            ->add(
+                'barcode_generator_show_product_price',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price'))
+                    ->defaultValue(setting('barcode_generator_show_product_price', true))
+            )
+            ->add(
+                'barcode_generator_show_product_sale_price',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_sale_price'))
+                    ->defaultValue(setting('barcode_generator_show_product_sale_price', false))
+            )
+            ->add(
+                'barcode_generator_show_product_brand',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_brand'))
+                    ->defaultValue(setting('barcode_generator_show_product_brand', false))
+            )
+            ->add(
+                'barcode_generator_show_product_category',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_category'))
+                    ->defaultValue(setting('barcode_generator_show_product_category', false))
+            )
+            ->add(
+                'barcode_generator_show_product_attributes',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_attributes'))
+                    ->defaultValue(setting('barcode_generator_show_product_attributes', false))
+            )
+            ->add(
+                'barcode_generator_show_product_description',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_description'))
+                    ->defaultValue(setting('barcode_generator_show_product_description', false))
+            )
+            ->add(
+                'barcode_generator_show_product_weight',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_weight'))
+                    ->defaultValue(setting('barcode_generator_show_product_weight', false))
+            )
+            ->add(
+                'barcode_generator_show_product_dimensions',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_dimensions'))
+                    ->defaultValue(setting('barcode_generator_show_product_dimensions', false))
+            )
+            ->add(
+                'barcode_generator_show_product_stock',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_stock'))
+                    ->defaultValue(setting('barcode_generator_show_product_stock', false))
+            )
+            ->add(
+                'barcode_generator_show_current_date',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_current_date'))
+                    ->defaultValue(setting('barcode_generator_show_current_date', false))
+            )
+            ->add(
+                'barcode_generator_show_company_name',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_company_name'))
+                    ->defaultValue(setting('barcode_generator_show_company_name', false))
+            )
             ->add(
                 'reset_info',
                 HtmlField::class,
                 HtmlFieldOption::make()
-                    ->content('
-                        <div class="alert alert-warning">
-                            <h6><i class="ti ti-alert-triangle me-2"></i>' . trans('plugins/fob-barcode-generator::barcode-generator.settings.reset_warning_title') . '</h6>
-                            <p class="mb-3">' . trans('plugins/fob-barcode-generator::barcode-generator.settings.reset_warning_message') . '</p>
-                            <button type="button" class="btn btn-warning btn-sm" id="reset-to-defaults-btn">
-                                <i class="ti ti-refresh me-1"></i>
-                                ' . trans('plugins/fob-barcode-generator::barcode-generator.settings.reset_to_defaults') . '
-                            </button>
-                        </div>
-                        <script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                const resetBtn = document.getElementById("reset-to-defaults-btn");
-                                if (resetBtn) {
-                                    resetBtn.addEventListener("click", function() {
-                                        if (confirm("' . trans('plugins/fob-barcode-generator::barcode-generator.settings.reset_confirmation') . '")) {
-                                            const defaults = ' . json_encode(barcode_generator_default_settings()) . ';
-                                            Object.keys(defaults).forEach(key => {
-                                                const fieldName = "barcode_generator_" + key;
-                                                const field = document.querySelector(`[name="${fieldName}"]`);
-                                                if (field) {
-                                                    if (field.type === "checkbox") {
-                                                        field.checked = defaults[key];
-                                                    } else {
-                                                        field.value = defaults[key];
-                                                    }
-                                                }
-                                            });
-                                            alert("' . trans('plugins/fob-barcode-generator::barcode-generator.settings.reset_success') . '");
-                                        }
-                                    });
-                                }
-                            });
-                        </script>
-                    ')
-            )
-            ->addCloseCollapsible('reset_settings');
+                    ->content(view('plugins/fob-barcode-generator::partials.reset-settings')->render())
+            );
     }
 }
