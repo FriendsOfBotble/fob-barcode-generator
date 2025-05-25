@@ -1,5 +1,6 @@
 <?php
 
+use FriendsOfBotble\BarcodeGenerator\Enums\BarcodeTypeEnum;
 use FriendsOfBotble\BarcodeGenerator\Models\BarcodeTemplate;
 use Illuminate\Database\Migrations\Migration;
 
@@ -7,6 +8,20 @@ return new class () extends Migration {
     public function up(): void
     {
         $this->seedDefaultTemplates();
+    }
+
+    public function down(): void
+    {
+        BarcodeTemplate::query()
+            ->whereIn('name', [
+                'Standard A4 Labels',
+                'Thermal 4x6 Labels',
+                'Small Product Labels',
+                'QR Code Labels',
+                'QR Code Thermal Labels',
+                'QR Code Small Labels',
+            ])
+            ->delete();
     }
 
     private function seedDefaultTemplates(): void
@@ -23,10 +38,13 @@ return new class () extends Migration {
                 'margin_bottom' => 10.00,
                 'margin_left' => 10.00,
                 'margin_right' => 10.00,
+                'gap_horizontal' => 2.00,
+                'gap_vertical' => 2.00,
                 'padding' => 2.00,
                 'columns_per_page' => 4,
                 'rows_per_page' => 10,
-                'barcode_type' => 'C128',
+                'labels_per_page' => 40,
+                'barcode_type' => BarcodeTypeEnum::CODE128,
                 'barcode_width' => 40.00,
                 'barcode_height' => 15.00,
                 'include_text' => true,
@@ -47,10 +65,13 @@ return new class () extends Migration {
                 'margin_bottom' => 5.00,
                 'margin_left' => 5.00,
                 'margin_right' => 5.00,
+                'gap_horizontal' => 2.00,
+                'gap_vertical' => 2.00,
                 'padding' => 5.00,
                 'columns_per_page' => 1,
                 'rows_per_page' => 1,
-                'barcode_type' => 'C128',
+                'labels_per_page' => 1,
+                'barcode_type' => BarcodeTypeEnum::CODE128,
                 'barcode_width' => 80.00,
                 'barcode_height' => 20.00,
                 'include_text' => true,
@@ -71,10 +92,13 @@ return new class () extends Migration {
                 'margin_bottom' => 10.00,
                 'margin_left' => 10.00,
                 'margin_right' => 10.00,
+                'gap_horizontal' => 2.00,
+                'gap_vertical' => 2.00,
                 'padding' => 1.00,
                 'columns_per_page' => 6,
                 'rows_per_page' => 15,
-                'barcode_type' => 'C128',
+                'labels_per_page' => 90,
+                'barcode_type' => BarcodeTypeEnum::CODE128,
                 'barcode_width' => 25.00,
                 'barcode_height' => 8.00,
                 'include_text' => true,
@@ -95,10 +119,13 @@ return new class () extends Migration {
                 'margin_bottom' => 10.00,
                 'margin_left' => 10.00,
                 'margin_right' => 10.00,
+                'gap_horizontal' => 2.00,
+                'gap_vertical' => 2.00,
                 'padding' => 3.00,
                 'columns_per_page' => 4,
                 'rows_per_page' => 5,
-                'barcode_type' => 'QRCODE',
+                'labels_per_page' => 20,
+                'barcode_type' => BarcodeTypeEnum::QRCODE,
                 'barcode_width' => 40.00,
                 'barcode_height' => 40.00,
                 'include_text' => true,
@@ -119,16 +146,46 @@ return new class () extends Migration {
                 'margin_bottom' => 5.00,
                 'margin_left' => 5.00,
                 'margin_right' => 5.00,
+                'gap_horizontal' => 2.00,
+                'gap_vertical' => 2.00,
                 'padding' => 10.00,
                 'columns_per_page' => 1,
                 'rows_per_page' => 1,
-                'barcode_type' => 'QRCODE',
+                'labels_per_page' => 1,
+                'barcode_type' => BarcodeTypeEnum::QRCODE,
                 'barcode_width' => 80.00,
                 'barcode_height' => 80.00,
                 'include_text' => true,
                 'text_position' => 'bottom',
                 'text_size' => 12,
                 'fields' => ['name', 'sku', 'price'],
+                'is_default' => false,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'QR Code Small Labels',
+                'description' => 'Compact QR code labels for small products',
+                'paper_size' => 'A4',
+                'orientation' => 'portrait',
+                'label_width' => 35.00,
+                'label_height' => 35.00,
+                'margin_top' => 10.00,
+                'margin_bottom' => 10.00,
+                'margin_left' => 10.00,
+                'margin_right' => 10.00,
+                'gap_horizontal' => 2.00,
+                'gap_vertical' => 2.00,
+                'padding' => 2.00,
+                'columns_per_page' => 5,
+                'rows_per_page' => 7,
+                'labels_per_page' => 35,
+                'barcode_type' => BarcodeTypeEnum::QRCODE,
+                'barcode_width' => 25.00,
+                'barcode_height' => 25.00,
+                'include_text' => true,
+                'text_position' => 'bottom',
+                'text_size' => 6,
+                'fields' => ['sku'],
                 'is_default' => false,
                 'is_active' => true,
             ],
