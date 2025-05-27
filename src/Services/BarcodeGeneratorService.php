@@ -201,7 +201,12 @@ class BarcodeGeneratorService
             if ($value) {
                 // Determine if field should be multiline based on content length
                 $fieldClass = strlen($value) > 30 ? 'field multiline field-' . $field : 'field single-line field-' . $field;
-                $html .= '<div class="' . $fieldClass . '">' . e($value) . '</div>';
+                // Don't escape HTML for fields that contain HTML markup
+                if ($this->fieldContainsHtml($field)) {
+                    $html .= '<div class="' . $fieldClass . '">' . $value . '</div>';
+                } else {
+                    $html .= '<div class="' . $fieldClass . '">' . e($value) . '</div>';
+                }
             }
         }
 
@@ -228,6 +233,18 @@ class BarcodeGeneratorService
             case 'product_sale_price':
             case 'sale_price':
                 return $product->sale_price ? format_price($product->sale_price) : null;
+            case 'product_price_smart':
+                // Show sale price if available, otherwise original price
+                return $product->sale_price ? format_price($product->sale_price) : format_price($product->price);
+            case 'product_price_with_original':
+                // Show both prices with proper formatting when on sale
+                return $this->formatPriceWithOriginal($product);
+            case 'product_price_sale_only':
+                // Show only sale price (same as product_sale_price)
+                return $product->sale_price ? format_price($product->sale_price) : null;
+            case 'product_price_original_only':
+                // Show only original price
+                return format_price($product->price);
             case 'product_brand':
             case 'brand':
                 return $product->brand?->name;
@@ -255,6 +272,21 @@ class BarcodeGeneratorService
             default:
                 return null;
         }
+    }
+
+    protected function formatPriceWithOriginal(Product $product): ?string
+    {
+        if (!$product->sale_price) {
+            // No sale price, just return original price as a single field
+            return '<div class="field single-line field-product_price">' . format_price($product->price) . '</div>';
+        }
+
+        // Product is on sale, return both prices as separate divs
+        $originalPrice = format_price($product->price);
+        $salePrice = format_price($product->sale_price);
+
+        return '<div class="field single-line field-product_price" style="text-decoration: line-through !important; font-size: 8pt !important;">' . $originalPrice . '</div>' .
+               '<div class="field single-line field-product_sale_price" style="font-size: 12pt !important; font-weight: bold !important;">' . $salePrice . '</div>';
     }
 
     protected function formatDimensions(Product $product): ?string
@@ -470,12 +502,27 @@ class BarcodeGeneratorService
                     $html = str_replace($placeholder, '', $html);
                 } else {
                     $value = $this->getProductFieldValue($product, $field) ?: '';
-                    $html = str_replace($placeholder, e($value), $html);
+                    // Don't escape HTML for fields that contain HTML markup
+                    if ($this->fieldContainsHtml($field)) {
+                        $html = str_replace($placeholder, $value, $html);
+                    } else {
+                        $html = str_replace($placeholder, e($value), $html);
+                    }
                 }
             }
         }
 
         return $html;
+    }
+
+    protected function fieldContainsHtml(string $field): bool
+    {
+        // Fields that return HTML markup and should not be escaped
+        $htmlFields = [
+            'product_price_with_original',
+        ];
+
+        return in_array($field, $htmlFields);
     }
 
     protected function processCustomOrderTemplate(Order $order, BarcodeTemplate $template): string

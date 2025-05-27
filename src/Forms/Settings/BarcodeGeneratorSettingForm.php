@@ -275,6 +275,38 @@ class BarcodeGeneratorSettingForm extends SettingForm
                     ->defaultValue(setting('barcode_generator_show_product_sale_price', false))
             )
             ->add(
+                'barcode_generator_show_product_price_smart',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_smart'))
+                    ->defaultValue(setting('barcode_generator_show_product_price_smart', false))
+                    ->helperText(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_smart_help'))
+            )
+            ->add(
+                'barcode_generator_show_product_price_with_original',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_with_original'))
+                    ->defaultValue(setting('barcode_generator_show_product_price_with_original', false))
+                    ->helperText(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_with_original_help'))
+            )
+            ->add(
+                'barcode_generator_show_product_price_sale_only',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_sale_only'))
+                    ->defaultValue(setting('barcode_generator_show_product_price_sale_only', false))
+                    ->helperText(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_sale_only_help'))
+            )
+            ->add(
+                'barcode_generator_show_product_price_original_only',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_original_only'))
+                    ->defaultValue(setting('barcode_generator_show_product_price_original_only', false))
+                    ->helperText(trans('plugins/fob-barcode-generator::barcode-generator.settings.show_product_price_original_only_help'))
+            )
+            ->add(
                 'barcode_generator_show_product_brand',
                 OnOffCheckboxField::class,
                 OnOffFieldOption::make()

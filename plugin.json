@@ -5,7 +5,7 @@
     "provider": "FriendsOfBotble\\BarcodeGenerator\\Providers\\BarcodeGeneratorServiceProvider",
     "author": "Friends Of Botble",
     "url": "https://friendsofbotble.com",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Advanced barcode label generator for products & orders. Supports A4, Letter, thermal printers with customizable templates, bulk operations, and multiple barcode types (CODE128, QR, EAN, UPC, DataMatrix)",
     "minimum_core_version": "7.5.0"
 }

@@ -23,8 +23,16 @@ A comprehensive barcode generator plugin for Botble CMS that allows you to gener
 - Granular control over which product information appears on labels
 - Show/hide product name, SKU, price, brand, category, and more
 - Global settings that override template configurations
-- 14 different product fields to choose from
+- 18 different product fields to choose from including enhanced pricing options
 - Smart fallback to template settings when needed
+
+✅ **Enhanced Pricing Display Options**
+- **Smart Price**: Automatically shows sale price if available, otherwise original price
+- **Price with Original**: Shows both sale and original prices with strikethrough and "Sale" label
+- **Sale Price Only**: Shows only discounted prices
+- **Original Price Only**: Shows only regular prices
+- Professional styling with red "Sale" labels and strikethrough original prices
+- Solves customer confusion when products have both original and discounted prices
 
 ![Field Display Settings](art/2.png)
 
