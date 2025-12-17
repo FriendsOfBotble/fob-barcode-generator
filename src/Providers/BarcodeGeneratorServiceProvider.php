@@ -23,7 +23,7 @@ class BarcodeGeneratorServiceProvider extends ServiceProvider
             ->loadAndPublishTranslations()
             ->publishAssets()
             ->loadAndPublishViews()
-            ->loadRoutes();
+            ->loadRoutes(['web', 'vendor']);
 
         DashboardMenu::default()->beforeRetrieving(function (): void {
             DashboardMenu::make()

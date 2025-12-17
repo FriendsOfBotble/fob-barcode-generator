@@ -2,9 +2,11 @@
 
 namespace FriendsOfBotble\BarcodeGenerator\Providers;
 
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Supports\ServiceProvider;
 use Botble\Ecommerce\Models\Product;
 use FriendsOfBotble\BarcodeGenerator\Services\BarcodeGeneratorService;
+use Illuminate\Support\Facades\Route;
 
 class HookServiceProvider extends ServiceProvider
 {
@@ -12,6 +14,24 @@ class HookServiceProvider extends ServiceProvider
     {
         add_action(BASE_ACTION_META_BOXES, [$this, 'addBarcodeMetaBox'], 55, 2);
         add_filter('ecommerce_product_extra_buttons', [$this, 'addProductBarcodeButton'], 10, 2);
+    }
+
+    protected function isVendorPanel(): bool
+    {
+        if (! is_plugin_active('marketplace')) {
+            return false;
+        }
+
+        return request()->segment(1) === config('plugins.marketplace.general.vendor_panel_dir', 'vendor');
+    }
+
+    protected function getBarcodeGeneratorUrl(int|string $productId): string
+    {
+        if ($this->isVendorPanel() && Route::has('marketplace.vendor.barcode-generator.index')) {
+            return route('marketplace.vendor.barcode-generator.index', ['products[]' => $productId]);
+        }
+
+        return route('barcode-generator.index', ['products[]' => $productId]);
     }
 
     public function addBarcodeMetaBox(string $context, object $object): void
@@ -54,8 +74,8 @@ class HookServiceProvider extends ServiceProvider
 
             $html .= '</p>';
             $html .= '<div class="d-flex gap-2 justify-content-center">';
-            $html .= '<a href="' . route('barcode-generator.index', ['products[]' => $product->id]) . '" class="btn btn-sm btn-primary" target="_blank">';
-            $html .= '<i class="ti ti-printer"></i> ' . trans('plugins/fob-barcode-generator::barcode-generator.print_label');
+            $html .= '<a href="' . $this->getBarcodeGeneratorUrl($product->id) . '" class="btn btn-sm btn-primary" target="_blank">';
+            $html .= BaseHelper::renderIcon('ti ti-printer') . ' ' . trans('plugins/fob-barcode-generator::barcode-generator.print_label');
             $html .= '</a>';
             $html .= '</div>';
             $html .= '</div>';
@@ -76,8 +96,8 @@ class HookServiceProvider extends ServiceProvider
             return $buttons;
         }
 
-        $button = '<a href="' . route('barcode-generator.index', ['products[]' => $product->id]) . '" class="btn btn-info btn-sm" title="' . trans('plugins/fob-barcode-generator::barcode-generator.generate_barcode') . '">';
-        $button .= '<i class="ti ti-barcode"></i>';
+        $button = '<a href="' . $this->getBarcodeGeneratorUrl($product->id) . '" class="btn btn-info btn-sm" title="' . trans('plugins/fob-barcode-generator::barcode-generator.generate_barcode') . '">';
+        $button .= BaseHelper::renderIcon('ti ti-barcode');
         $button .= '</a>';
 
         return $buttons . $button;
